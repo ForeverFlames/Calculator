@@ -61,7 +61,3 @@ body {
 .op  { background: #869397ff; }
 .fn  { background: #002244ff; }
 
-.key:hover  { filter: brightness(1.12); }
-.key:active { filter: brightness(0.85); }
-
-
