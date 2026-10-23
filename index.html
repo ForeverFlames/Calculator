@@ -1,49 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculator</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="calculator">
-  <label>
-    <input>
-  </label>
-  <div class="display">
-    <div class="screen" id="input" data-placeholder="Input"></div>
-    <div class="screen" id="output" data-placeholder="Output"></div>
+<div id="calculator">
+
+  <div id="display">
+    <div class="screen" id="input"></div>
+    <div class="screen" id="output"></div>
   </div>
 
-  <div class="keys">
+  <div id="keys">
+    <div class="key num" onclick="press('7')">7</div>
+    <div class="key num" onclick="press('8')">8</div>
+    <div class="key num" onclick="press('9')">9</div>
+    <div class="key op" onclick="press('^')">^</div>
+    <div class="key fn wide" onclick="press('+')">+</div>
 
-    <button class="key num" data-value="7">7</button>
-    <button class="key num" data-value="8">8</button>
-    <button class="key num" data-value="9">9</button>
-    <button class="key op"  data-value="^">^</button>
-    <button class="key fn wide" data-value="+">+</button>
+    <div class="key num" onclick="press('4')">4</div>
+    <div class="key num" onclick="press('5')">5</div>
+    <div class="key num" onclick="press('6')">6</div>
+    <div class="key op" onclick="press('/')">/</div>
+    <div class="key fn wide" onclick="press('%')">%</div>
 
-    <button class="key num" data-value="4">4</button>
-    <button class="key num" data-value="5">5</button>
-    <button class="key num" data-value="6">6</button>
-    <button class="key op"  data-value="/">/</button>
-    <button class="key fn wide" data-value="%">%</button>
+    <div class="key num" onclick="press('1')">1</div>
+    <div class="key num" onclick="press('2')">2</div>
+    <div class="key num" onclick="press('3')">3</div>
+    <div class="key op" onclick="press('*')">*</div>
+    <div class="key fn" onclick="press('(')">(</div>
+    <div class="key fn" onclick="press(')')">)</div>
 
-    <button class="key num" data-value="1">1</button>
-    <button class="key num" data-value="2">2</button>
-    <button class="key num" data-value="3">3</button>
-    <button class="key op"  data-value="*">*</button>
-    <button class="key fn"  data-value="(">(</button>
-    <button class="key fn"  data-value=")">)</button>
-
-    <button class="key num" data-value=".">.</button>
-    <button class="key num" data-value="0">0</button>
-    <button class="key num" data-action="equals">=</button>
-    <button class="key op"  data-value="-">-</button>
-    <button class="key fn"  data-action="left">L</button>
-    <button class="key fn"  data-action="right">R</button>
+    <div class="key num" onclick="press('.')">.</div>
+    <div class="key num" onclick="press('0')">0</div>
+    <div class="key num" onclick="calculate()">=</div>
+    <div class="key op" onclick="press('-')">-</div>
+    <div class="key fn" onclick="goBack()">L</div>
+    <div class="key fn" onclick="goForward()">R</div>
   </div>
 
 </div>
@@ -51,4 +47,3 @@
 <script src="index.js"></script>
 </body>
 </html>
-

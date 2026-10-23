@@ -1,192 +1,151 @@
 const inputScreen = document.getElementById("input");
 const outputScreen = document.getElementById("output");
-const keys = document.querySelectorAll(".key");
+
+const typingKeys = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "+", "-", "*", "/", "^", "%", "(", ")"];
+const operatorKeys = ["+", "-", "*", "/", "^", "%"];
+const digitValues = { "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9 };
 
 let expression = "";
 let result = "";
+let showingAnswer = false;
 
-let tokens = [];
+let historyList = JSON.parse(localStorage.getItem("calculatorHistory"));
+if (historyList === null) {
+    historyList = [];
+}
+let historyIndex = historyList.length;
+
+let text = "";
 let position = 0;
+let hasError = false;
 
-keys.forEach(function (key) {
-    key.addEventListener("click", function () {
-        handleKey(key);
-    });
+document.addEventListener("keydown", (event) => {
+    const key = event.key;
+
+    if (isInList(key, typingKeys)) {
+        press(key);
+    } else if (key === "Enter" || key === "=") {
+        calculate();
+    } else if (key === "Backspace") {
+        deleteLast();
+    } else if (key === "Escape" || key === "Delete") {
+        clearAll();
+    } else if (key === "ArrowLeft") {
+        goBack();
+    } else if (key === "ArrowRight") {
+        goForward();
+    }
 });
 
-function handleKey(key) {
-    const value = key.dataset.value;
-    const action = key.dataset.action;
-
-    if (value) {
-        expression += value;
-        updateScreen();
-        return;
+function isInList(item, list) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i] === item) {
+            return true;
+        }
     }
-
-    switch (action) {
-        case "equals":
-            calculate();
-            break;
-
-        case "left":
-        case "right":
-            console.log(action + " pressed");
-            break;
-    }
+    return false;
 }
 
-function calculate() {
-    if (expression === "") {
-        return;
+function press(key) {
+    if (showingAnswer) {
+        if (isInList(key, operatorKeys) && result !== "Error") {
+            expression = "" + result;
+        } else {
+            expression = "";
+        }
+        result = "";
+        showingAnswer = false;
+        historyIndex = historyList.length;
     }
 
-    try {
-        tokens = tokenize(expression);
-        position = 0;
+    expression = expression + key;
+    updateScreen();
+}
 
-        const answer = parseExpression();
+function deleteLast() {
+    if (showingAnswer) {
+        result = "";
+        showingAnswer = false;
+        historyIndex = historyList.length;
+    }
 
-        if (position < tokens.length) {
-            throw new Error("Unexpected " + tokens[position]);
-        }
-
-        if (!isFinite(answer)) {
-            throw new Error("Not a finite number");
-        }
-
-        result = formatNumber(answer);
-    } catch (error) {
-        result = "Error";
+    if (expression.length > 0) {
+        expression = expression.substring(0, expression.length - 1);
     }
 
     updateScreen();
 }
 
-function tokenize(text) {
-    const list = [];
-    let i = 0;
+function clearAll() {
+    expression = "";
+    result = "";
+    showingAnswer = false;
+    historyIndex = historyList.length;
+    updateScreen();
+}
 
-    while (i < text.length) {
-        const char = text[i];
-
-        if (isDigit(char) || char === ".") {
-            let numberText = "";
-
-            while (i < text.length && (isDigit(text[i]) || text[i] === ".")) {
-                numberText += text[i];
-                i++;
-            }
-
-            const number = Number(numberText);
-
-            if (isNaN(number)) {
-                throw new Error("Bad number: " + numberText);
-            }
-
-            list.push(number);
-        } else if ("+-*/^()%".includes(char)) {
-            list.push(char);
-            i++;
-        } else {
-            throw new Error("Unknown character: " + char);
-        }
+function calculate() {
+    if (expression === "" || showingAnswer) {
+        return;
     }
 
-    return list;
+    text = expression;
+    position = 0;
+    hasError = false;
+
+    const answer = readSum();
+
+    if (position < text.length || !isValidNumber(answer)) {
+        hasError = true;
+    }
+
+    if (hasError) {
+        result = "Error";
+        historyIndex = historyList.length;
+    } else {
+        result = roundAnswer(answer);
+        historyList.push({ equation: expression, answer: result });
+        localStorage.setItem("calculatorHistory", JSON.stringify(historyList));
+        historyIndex = historyList.length - 1;
+    }
+
+    showingAnswer = true;
+    updateScreen();
+}
+
+function goBack() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        showHistoryEntry();
+    }
+}
+
+function goForward() {
+    if (historyIndex < historyList.length - 1) {
+        historyIndex++;
+        showHistoryEntry();
+    }
+}
+
+function showHistoryEntry() {
+    expression = historyList[historyIndex].equation;
+    result = historyList[historyIndex].answer;
+    showingAnswer = true;
+    updateScreen();
+}
+
+function peek() {
+    return text.charAt(position);
 }
 
 function isDigit(char) {
     return char >= "0" && char <= "9";
 }
 
-function peek() {
-    return tokens[position];
-}
-
-function next() {
-    return tokens[position++];
-}
-
-function parseExpression() {
-    let value = parseTerm();
+function readSum() {
+    let value = readProduct();
 
     while (peek() === "+" || peek() === "-") {
-        const operator = next();
-        const right = parseTerm();
-
-        if (operator === "+") {
-            value = value + right;
-        } else {
-            value = value - right;
-        }
-    }
-
-    return value;
-}
-
-function parseTerm() {
-    let value = parsePower();
-
-    while (peek() === "*" || peek() === "/") {
-        const operator = next();
-        const right = parsePower();
-
-        if (operator === "*") {
-            value = value * right;
-        } else {
-            if (right === 0) {
-                throw new Error("Can't divide by zero");
-            }
-            value = value / right;
-        }
-    }
-
-    return value;
-}
-
-function parsePower() {
-    const base = parseFactor();
-
-    if (peek() === "^") {
-        next();
-        const exponent = parsePower();
-        return Math.pow(base, exponent);
-    }
-
-    return base;
-}
-
-
-
-function parseFactor() {
-    const token = next();
-
-    if (typeof token === "number") {
-        return token;
-    }
-
-    if (token === "(") {
-        const value = parseExpression();
-
-        if (next() !== ")") {
-            throw new Error("Missing )");
-        }
-
-        return value;
-    }
-
-    throw new Error("Unexpected " + token);
-}
-
-
-function formatNumber(number) {
-    return String(parseFloat(number.toFixed(10)));
-}
-
-function updateScreen() {
-    inputScreen.textContent = expression;
-    outputScreen.textContent = result;
-}
-
-
+        const operator = peek();
+        position++;
+        const right = readProduct();
