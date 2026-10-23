@@ -149,3 +149,6 @@ function readSum() {
         const operator = peek();
         position++;
         const right = readProduct();
+    }
+}
+
