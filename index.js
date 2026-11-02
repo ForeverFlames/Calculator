@@ -161,4 +161,3 @@ function updateScreen() {
     inputScreen.innerText = expression;
     outputScreen.innerText = result;
 }
-
